@@ -30,9 +30,14 @@ jobs:
 
       - name: Install Quality Tools
         run: |
-          pip install ruff bandit
+          # Added mypy and pip-audit
+          pip install ruff bandit mypy pip-audit types-requests types-redis
           ruff --version
           bandit --version
+
+      - name: Install Dependencies for Mypy
+        # Mypy needs the actual packages installed to check their types
+        run: pip install -r requirements.txt
 
       - name: Run Linter (Ruff)
         # Checks for syntax errors and undefined names
@@ -42,11 +47,19 @@ jobs:
         # Fails if code is not formatted (you can run 'ruff format .' locally to fix)
         run: ruff format --check .
 
+      - name: Run Type Checker (Mypy)
+        # Ignores missing imports for libraries like OpenCV/InsightFace that lack stubs
+        run: mypy . --ignore-missing-imports
+
       - name: Run Security Check (Bandit)
         # Checks for common security vulnerabilities
         # -r: recursive scan of src directory
         # -ll: only report medium and high severity issues
         run: bandit -r src/ -ll
+
+      - name: Run Dependency Audit
+        # Scans requirements.txt for known vulnerabilities
+        run: pip-audit -r requirements.txt
 
   # JOB 2: Build Verification
   build:
