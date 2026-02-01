@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "smart-attendance-system"
+version = "1.0.0"
+description = "Face Recognition Attendance System with Anti-Spoofing & Edge AI"
+authors = [
+    { name="Soumik", email="soumik15630m@gmail.com" },
+]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.27.0",
+    "sqlalchemy>=2.0.0",
+    "asyncpg>=0.29.0",
+    "pgvector>=0.2.0",
+    "insightface>=0.7.3",
+    "onnxruntime-gpu>=1.17.0",
+    "opencv-python>=4.9.0",
+    "websockets>=12.0",
+    "pydantic-settings>=2.0.0",
+    "python-dotenv>=1.0.0",
+    "redis>=5.0.0",
+    "alembic>=1.13.0",
+    "requests>=2.31.0"
+]
+
+[project.scripts]
+start-attendance-server = "src.main:start"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*", "scripts*"]

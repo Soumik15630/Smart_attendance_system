@@ -2,29 +2,51 @@ import os
 import cv2
 import requests
 import numpy as np
+import warnings
 from insightface.app import FaceAnalysis
 
+SERVER_IP = os.getenv("SERVER_IP", "127.0.0.1")
+SERVER_PORT = os.getenv("SERVER_PORT", "8000")
+REG_URL = f"http://{SERVER_IP}:{SERVER_PORT}/persons/register"
 
-cuda_bin = r"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.8\bin"
+default_cuda_path = r"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.8\bin"
+cuda_bin = os.getenv("CUDA_PATH_BIN", default_cuda_path)
+
 if os.path.exists(cuda_bin):
     os.environ["PATH"] = cuda_bin + os.pathsep + os.environ["PATH"]
-    try: os.add_dll_directory(cuda_bin)
-    except: pass
+    if hasattr(os, "add_dll_directory"):
+        try: os.add_dll_directory(cuda_bin)
+        except: pass
 
-REG_URL = "http://127.0.0.1:8000/persons/register"
+print("--------------------------------------------------")
+print("FACE REGISTRATION CLIENT")
+print(f"Target Server: {REG_URL}")
+print("--------------------------------------------------")
 
-app = FaceAnalysis(name='buffalo_s', providers=['CUDAExecutionProvider'])
+# Suppress ONNX warnings
+warnings.filterwarnings("ignore")
+
+app = FaceAnalysis(name='buffalo_s', providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
 app.prepare(ctx_id=0, det_size=(640, 640))
 
 def enroll():
-    print("--------------------------------------------------")
-    print("FACE REGISTRATION SYSTEM")
-    print("--------------------------------------------------")
-    name = input("Enter Person Name: ")
-    emp_id = input("Enter Employee ID: ")
+    # Gather User Info
+    name = input("Enter Person Name: ").strip()
+    if not name:
+        print("Name cannot be empty.")
+        return
 
+    emp_id = input("Enter Employee ID: ").strip()
+
+    # Start Camera
     cap = cv2.VideoCapture(0)
-    print("\nLook at the camera. Press 's' to take a snapshot, or 'q' to cancel.")
+    if not cap.isOpened():
+        print("Error: Could not open webcam.")
+        return
+
+    print("\n[Controls]")
+    print("  's' -> Save Snapshot & Register")
+    print("  'q' -> Quit")
 
     while True:
         ret, frame = cap.read()
@@ -33,37 +55,48 @@ def enroll():
         frame = cv2.flip(frame, 1)
         display_frame = frame.copy()
 
-        # Quick detection for UI feedback
         faces = app.get(frame)
-        for face in faces:
-            bbox = face.bbox.astype(int)
-            cv2.rectangle(display_frame, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (255, 0, 0), 2)
+        status_color = (0, 0, 255) # Red (No Face)
+        status_text = "No Face Detected"
 
-        cv2.imshow("Registration - Snapshot", display_frame)
+        if len(faces) == 1:
+            status_color = (0, 255, 0) # Green (Good)
+            status_text = "Ready to Register (Press 's')"
+            bbox = faces[0].bbox.astype(int)
+            cv2.rectangle(display_frame, (bbox[0], bbox[1]), (bbox[2], bbox[3]), status_color, 2)
+        elif len(faces) > 1:
+            status_color = (0, 255, 255) # Yellow (Too Many)
+            status_text = "Too many faces! Only 1 allowed."
+
+        cv2.putText(display_frame, status_text, (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, status_color, 2)
+        cv2.imshow("Registration", display_frame)
+
         key = cv2.waitKey(1) & 0xFF
 
-        if key == ord('s') and len(faces) > 0:
-            # We use the embedding from the highest-score face
+        if key == ord('s') and len(faces) == 1:
             face = faces[0]
             payload = {
                 "name": name,
-                "employee_id": emp_id,
+                "employee_id": emp_id if emp_id else None,
                 "role": "Employee",
                 "embedding": face.embedding.tolist()
             }
 
+            print("Sending data to server...")
             try:
-                response = requests.post(REG_URL, json=payload)
+                headers = {"X-API-Key": os.getenv("API_KEY", "")}
+                response = requests.post(REG_URL, json=payload, headers=headers, timeout=10)
+
                 if response.status_code == 200:
-                    print(f"Success! {name} has been registered in Neon DB.")
+                    print(f" Success! {name} registered.")
+                    break
                 else:
-                    print(f"Failed: {response.text}")
+                    print(f" Failed: {response.text}")
             except Exception as e:
-                print(f"Connection Error: {e}")
-            break
+                print(f" Connection Error: {e}")
 
         elif key == ord('q'):
-            print("Registration cancelled.")
+            print("Cancelled.")
             break
 
     cap.release()
