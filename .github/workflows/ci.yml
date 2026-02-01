@@ -28,10 +28,11 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
 
-      - name: Install Ruff (Linter)
+      - name: Install Quality Tools
         run: |
-          pip install ruff
+          pip install ruff bandit
           ruff --version
+          bandit --version
 
       - name: Run Linter (Ruff)
         # Checks for syntax errors and undefined names
@@ -40,6 +41,12 @@ jobs:
       - name: Check Formatting
         # Fails if code is not formatted (you can run 'ruff format .' locally to fix)
         run: ruff format --check .
+
+      - name: Run Security Check (Bandit)
+        # Checks for common security vulnerabilities
+        # -r: recursive scan of src directory
+        # -ll: only report medium and high severity issues
+        run: bandit -r src/ -ll
 
   # JOB 2: Build Verification
   build:
