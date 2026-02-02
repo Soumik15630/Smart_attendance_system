@@ -23,14 +23,14 @@ found_paths = []
 print("Scanning for DLL folders...")
 for path in paths_to_check:
     if os.path.exists(path):
-        print(f"   ✅ Found folder: {path}")
+        print(f"   Found folder: {path}")
 
         # Safe DLL loading for Windows/Mypy
-        if sys.platform == 'win32':
+        if sys.platform == "win32":
             add_dll = getattr(os, "add_dll_directory", None)
             if add_dll:
                 try:
-                    add_dll(path) # Use the loop variable 'path'
+                    add_dll(path)  # Use the loop variable 'path'
                 except Exception:
                     pass
         found_paths.append(path)

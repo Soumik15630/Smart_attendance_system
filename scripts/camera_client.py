@@ -28,11 +28,11 @@ cuda_bin = os.getenv("CUDA_PATH_BIN", default_cuda_path)
 if os.path.exists(cuda_bin):
     os.environ["PATH"] = cuda_bin + os.pathsep + os.environ["PATH"]
 
-    if sys.platform == 'win32':
+    if sys.platform == "win32":
         add_dll = getattr(os, "add_dll_directory", None)
         if add_dll:
             try:
-                add_dll(cuda_bin) # Use 'cuda_bin' here
+                add_dll(cuda_bin)  # Use 'cuda_bin' here
             except Exception:
                 pass
 warnings.filterwarnings("ignore")
