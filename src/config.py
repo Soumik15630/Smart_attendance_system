@@ -8,7 +8,7 @@ class Settings(BaseSettings):
 
     # Database (Neon PostgreSQL)
     # format: postgresql+asyncpg://user:password@host:port/dbname
-    DATABASE_URL: str
+    DATABASE_URL: str = ""
 
     # Redis (Upstash or Local)
     # format: redis://host:port/0

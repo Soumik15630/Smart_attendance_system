@@ -18,6 +18,12 @@ from src.models import Base
 
 config = context.config
 
+section = config.get_section(config.config_ini_section)
+connectable = async_engine_from_config(
+    section if section is not None else {},
+    prefix="sqlalchemy.",
+    poolclass=pool.NullPool,
+)
 # Overwrite the DB URL in alembic.ini
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
@@ -53,12 +59,11 @@ def do_run_migrations(connection: Connection) -> None:
 
 
 async def run_migrations_online() -> None:
-    """Run migrations in 'online' mode.
-    In this scenario we need to create an Engine
-    and associate a connection with the context.
-    """
+    # Get the section and ensure it is a dictionary
+    section = config.get_section(config.config_ini_section)
+
     connectable = async_engine_from_config(
-        config.get_section(config.config_ini_section),
+        section if section is not None else {},
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )

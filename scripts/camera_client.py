@@ -21,7 +21,7 @@ MIN_DET_SCORE = 0.60  # 0-1.0 (Below this = "Not a clear face")
 API_URL = f"http://{SERVER_IP}:{SERVER_PORT}/attendance/identify"
 WS_URL = f"ws://{SERVER_IP}:{SERVER_PORT}/ws/video-input"
 
-# --- CUDA Setup (Same as before) ---
+# --- CUDA Setup ---
 default_cuda_path = r"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.8\bin"
 cuda_bin = os.getenv("CUDA_PATH_BIN", default_cuda_path)
 if os.path.exists(cuda_bin):
@@ -33,21 +33,20 @@ if os.path.exists(cuda_bin):
 
 warnings.filterwarnings("ignore")
 
-
-# ... [AsyncWebSocketClient Class remains the same] ...
 class AsyncWebSocketClient:
-    def __init__(self, uri):
+    def __init__(self, uri: str):
         self.uri = uri
         self.loop = asyncio.new_event_loop()
-        self.queue = asyncio.Queue(maxsize=1)
+        # Ensure the queue has a type annotation
+        self.queue: asyncio.Queue[bytes] = asyncio.Queue(maxsize=1)
         self.thread = threading.Thread(target=self._start_loop, daemon=True)
         self.thread.start()
 
-    def _start_loop(self):
+    def _start_loop(self) -> None:  # Added -> None
         asyncio.set_event_loop(self.loop)
         self.loop.run_until_complete(self._main_loop())
 
-    async def _main_loop(self):
+    async def _main_loop(self) -> None:  # Added -> None
         while True:
             try:
                 async with websockets.connect(self.uri) as websocket:
@@ -58,7 +57,7 @@ class AsyncWebSocketClient:
             except Exception:
                 await asyncio.sleep(2)
 
-    def send_frame(self, frame_bytes):
+    def send_frame(self, frame_bytes: bytes) -> None:  # Added -> None
         if self.loop.is_running():
             if self.queue.full():
                 try:
@@ -66,7 +65,6 @@ class AsyncWebSocketClient:
                 except Exception:
                     pass
             self.loop.call_soon_threadsafe(self.queue.put_nowait, frame_bytes)
-
 
 # --- AI Setup ---
 print("[-] Loading AI Models...")
@@ -77,10 +75,9 @@ app.prepare(ctx_id=0, det_size=(640, 640))
 print(" AI Ready.")
 
 ws_client = AsyncWebSocketClient(WS_URL)
-
 latest_frame = None
-detected_faces = []
-recognition_results = {}
+detected_faces: list = []
+recognition_results: dict = {}
 results_lock = threading.Lock()
 state_lock = threading.Lock()
 last_api_call = 0
@@ -179,8 +176,6 @@ def ai_worker():
 
         with state_lock:
             detected_faces = valid_faces
-
-
 def start_camera():
     global latest_frame, running
     cap = cv2.VideoCapture(CAMERA_INDEX)
