@@ -26,7 +26,7 @@ if cudnn_env_val:
 # Clean up empty strings and strip whitespace
 paths_to_check = [p.strip() for p in paths_to_check if p.strip()]
 
-found_paths = []
+found_paths: list[str] = []
 
 if not paths_to_check:
     print("WARNING: No 'CUDA_PATH_BIN' or 'CUDNN_PATH_BIN' set in .env file.")
