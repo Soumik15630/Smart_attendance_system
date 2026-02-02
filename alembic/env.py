@@ -7,7 +7,7 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-from alembic import context
+from alembic import context # type: ignore
 
 # --- CUSTOM IMPORTS START ---
 # Add the project root to the python path so imports work

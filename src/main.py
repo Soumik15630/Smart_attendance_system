@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from alembic.config import Config
-from alembic import command
+from alembic import command # type: ignore
 
 from src.config import settings
 from src.database import engine

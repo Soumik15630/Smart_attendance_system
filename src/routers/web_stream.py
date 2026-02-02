@@ -1,6 +1,7 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from typing import List
 
+
 router = APIRouter(prefix="/ws", tags=["streaming"])
 
 

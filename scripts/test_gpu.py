@@ -1,6 +1,15 @@
 import os
+import sys
 import onnxruntime as ort
 
+if sys.platform == 'win32':
+    # Use getattr to prevent mypy from flagging missing attribute on non-Windows
+    add_dll = getattr(os, "add_dll_directory", None)
+    if add_dll:
+        try:
+            add_dll(path) # or cuda_bin
+        except Exception:
+            pass
 print("----------------------------------------------------------------")
 print(f"ONNX Runtime Version: {ort.__version__}")
 print("----------------------------------------------------------------")
