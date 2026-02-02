@@ -33,6 +33,7 @@ if os.path.exists(cuda_bin):
 
 warnings.filterwarnings("ignore")
 
+
 class AsyncWebSocketClient:
     def __init__(self, uri: str):
         self.uri = uri
@@ -65,6 +66,7 @@ class AsyncWebSocketClient:
                 except Exception:
                     pass
             self.loop.call_soon_threadsafe(self.queue.put_nowait, frame_bytes)
+
 
 # --- AI Setup ---
 print("[-] Loading AI Models...")
@@ -176,6 +178,8 @@ def ai_worker():
 
         with state_lock:
             detected_faces = valid_faces
+
+
 def start_camera():
     global latest_frame, running
     cap = cv2.VideoCapture(CAMERA_INDEX)
